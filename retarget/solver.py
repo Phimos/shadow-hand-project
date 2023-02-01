@@ -1,10 +1,9 @@
 from itertools import combinations
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import nlopt
 import numpy as np
 import torch
-
 from shadow_hand import ShadowHandModule
 
 
@@ -40,14 +39,15 @@ class Solver(object):
         self.shadow_hand = ShadowHandModule()
         self.loss_fn = torch.nn.SmoothL1Loss(beta=0.01, reduction="none")
         self.optimizer = self.create_optimizer()
+        self.latest = np.zeros(self.dof)
 
     @property
     def dof(self) -> int:
         return self.shadow_hand.dof
 
     def create_objective_function(self, target: np.ndarray, latest: np.ndarray):
-        target: torch.Tensor = torch.from_numpy(target)
-        latest: torch.Tensor = torch.from_numpy(latest)
+        target: torch.Tensor = torch.from_numpy(target).float()
+        latest: torch.Tensor = torch.from_numpy(latest).float()
 
         def objective(x: np.ndarray, grad: np.ndarray) -> float:
             x: torch.Tensor = torch.from_numpy(x.copy()).float()
@@ -59,10 +59,10 @@ class Solver(object):
             loss = self.loss_fn(
                 position_middles_and_tips(keypoints), position_middles_and_tips(target)
             )
-            if self.weights is not None:
-                loss = torch.sum(loss * self.weights) / torch.sum(self.weights)
-            else:
-                loss = torch.mean(loss)
+            # if self.weights is not None:
+            #     loss = torch.sum(loss * self.weights) / torch.sum(self.weights)
+            # else:
+            loss = torch.mean(loss)
 
             # add regularization
             loss += 1e-3 * torch.sum((x - latest) ** 2)
@@ -115,6 +115,18 @@ class Solver(object):
         self.optimizer.set_ftol_abs(1e-5)
         x = self.optimizer.optimize(latest)
         return x
+
+    def get_pose(self, angles: np.ndarray) -> np.ndarray:
+        angles = torch.from_numpy(angles).float()
+        keypoints = self.shadow_hand.forward(angles)
+        return keypoints.detach().numpy()
+
+    def step(self, target: np.ndarray) -> np.ndarray:
+        objective_function = self.create_objective_function(target, self.latest)
+        self.optimizer.set_min_objective(objective_function)
+        self.optimizer.set_ftol_abs(1e-5)
+        self.latest = self.optimizer.optimize(self.latest)
+        return self.latest
 
 
 if __name__ == "__main__":

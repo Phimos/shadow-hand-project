@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import nlopt
 import numpy as np
 import torch
-from natsort import natsorted
-from scipy import signal
-from tqdm import tqdm
-
 from align import best_fit_transform
 from const import HAND_KEYPOINT_NAMES, HAND_VISULIZATION_LINKS
+from natsort import natsorted
 from poselib.skeleton.skeleton3d import ShadowHandSkeletonState, ShadowHandSkeletonTree
+from scipy import signal
 from shadow_hand import ShadowHandModule
 from smooth import VelocityFilter
+from solver import Solver
+from tqdm import tqdm
 from visualization import (
     plot_hand_keypoints,
     plot_hand_motion_keypoints,
@@ -184,7 +184,8 @@ if __name__ == "__main__":
 
     skeleton = ShadowHandSkeletonTree.from_mjcf("shadow_hand_full.xml")
     # solver = RetargetSolver(skeleton, links)
-    solver = RetargetSolver(links)
+    # solver = RetargetSolver(links)
+    solver = Solver()
     # solver = RetargetSolver(skeleton, links, weights=weights)
     zero_pose = ShadowHandSkeletonState.zero_pose(skeleton)
 
@@ -242,16 +243,17 @@ if __name__ == "__main__":
     start = time.time()
     for i in tqdm(range(target.shape[0])):
         latest = solver.solve(target[i], latset)
-        result[i] = ShadowHandSkeletonState.from_angles(
-            skeleton, torch.from_numpy(latest).float()
-        ).keypoints
+        # result[i] = ShadowHandSkeletonState.from_angles(
+        #     skeleton, torch.from_numpy(latest).float()
+        # ).keypoints
+        result[i] = solver.get_pose(latest)
         print(latest)
     end = time.time()
     print(f"solve {target.shape[0]} frames in {end - start:.2f} seconds")
     print(f"average {target.shape[0] / (end - start):.2f} fps")
 
     # plot_hand_motion_keypoints(result, "result_glove_1217.gif")
-    # plot_hand_motion_keypoints(result)
+    plot_hand_motion_keypoints(result)
     # # plot_hand_motion_keypoints(target, result)
     # # plot_two_hands_motion_keypoints(target, result, "result_glove_both_1217.gif")
-    # plot_two_hands_motion_keypoints(target, result)
+    plot_two_hands_motion_keypoints(target, result)
