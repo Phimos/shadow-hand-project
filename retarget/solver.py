@@ -34,7 +34,7 @@ def position_middles_and_tips(keypoints: torch.Tensor) -> torch.Tensor:
     return keypoints[..., [3, 4, 7, 8, 11, 12, 15, 16, 19, 20], :]
 
 
-class Solver(object):
+class MotionMapper(object):
     def __init__(self):
         self.shadow_hand = ShadowHandModule()
         self.loss_fn = torch.nn.SmoothL1Loss(beta=0.01, reduction="none")
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     # zero_pose = shadow.zero_pose()
     # print(zero_pose)
 
-    solver = Solver()
+    solver = MotionMapper()
 
     zero_pose = solver.shadow_hand.zero_pose()
 

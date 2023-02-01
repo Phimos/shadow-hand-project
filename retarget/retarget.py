@@ -9,7 +9,7 @@ from const import HAND_KEYPOINT_NAMES, HAND_VISULIZATION_LINKS
 from natsort import natsorted
 from scipy import signal
 from smooth import VelocityFilter
-from solver import Solver
+from solver import MotionMapper
 from tqdm import tqdm
 from visualization import (
     plot_hand_keypoints,
@@ -51,7 +51,6 @@ def calc_scale_factor(source: np.ndarray, target: np.ndarray) -> float:
 
 
 if __name__ == "__main__":
-    os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
     filenames = glob.glob("hand_pose/*joint*.npy")
     filenames = natsorted(filenames)
     target = np.stack([np.load(filename) for filename in filenames])
@@ -77,7 +76,7 @@ if __name__ == "__main__":
         ("palm", "rftip"),
         ("palm", "lftip"),
     ]
-    solver = Solver()
+    solver = MotionMapper()
     zero_keypoints = solver.get_zero_pose()
 
     scale_factor = np.mean(
