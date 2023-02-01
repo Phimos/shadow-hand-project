@@ -121,12 +121,16 @@ class Solver(object):
         keypoints = self.shadow_hand.forward(angles)
         return keypoints.detach().numpy()
 
+    def get_zero_pose(self) -> np.ndarray:
+        return self.get_pose(np.zeros(self.dof))
+
     def step(self, target: np.ndarray) -> np.ndarray:
-        objective_function = self.create_objective_function(target, self.latest)
+        latest = self.latest.copy()
+        objective_function = self.create_objective_function(target, latest)
         self.optimizer.set_min_objective(objective_function)
         self.optimizer.set_ftol_abs(1e-5)
-        self.latest = self.optimizer.optimize(self.latest)
-        return self.latest
+        self.latest = self.optimizer.optimize(latest)
+        return self.latest.copy()
 
 
 if __name__ == "__main__":
@@ -148,3 +152,5 @@ if __name__ == "__main__":
     zero_pose = solver.shadow_hand.zero_pose()
 
     print(zero_pose)
+
+    print(solver.get_zero_pose())
