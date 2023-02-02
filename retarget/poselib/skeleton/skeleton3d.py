@@ -658,7 +658,8 @@ class SkeletonState(Serializable):
     @property
     def local_transformation(self):
         """local translation + local rotation. It describes the transformation from child frame to
-        parent frame given in the order of child nodes appeared in `.skeleton_tree.node_names`"""
+        parent frame given in the order of child nodes appeared in `.skeleton_tree.node_names`
+        """
         if not hasattr(self, "_local_transformation"):
             self._local_transformation = transform_from_rotation_translation(
                 r=self.local_rotation, t=self.local_translation
