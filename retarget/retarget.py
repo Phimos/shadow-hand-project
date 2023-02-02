@@ -55,6 +55,8 @@ if __name__ == "__main__":
     filenames = natsorted(filenames)
     target = np.stack([np.load(filename) for filename in filenames])
 
+    target = np.load("leap_motion.npy")[::4]
+
     # target = np.load(
     #     "/Users/pims/Downloads/MatlabVisualizeGloveData-master/data/HandData_apple_VR_5.npy"
     # )
@@ -96,6 +98,8 @@ if __name__ == "__main__":
             i, [5, 9, 13]
         ].mean(axis=0)
 
+    plot_hand_motion_keypoints(target)
+
     # human_link_lengths = calc_link_lengths(target[0], HAND_VISULIZATION_LINKS)
     # robot_link_lengths = calc_link_lengths(zero_pose.keypoints, HAND_VISULIZATION_LINKS)
     # for i, (start, end) in enumerate(HAND_VISULIZATION_LINKS):
@@ -121,7 +125,6 @@ if __name__ == "__main__":
         latest = solver.step(target[i])
         # latest = solver.solve(target[i], latset)
         result[i] = solver.get_pose(latest)
-        print(latest)
     end = time.time()
     print(f"solve {target.shape[0]} frames in {end - start:.2f} seconds")
     print(f"average {target.shape[0] / (end - start):.2f} fps")
