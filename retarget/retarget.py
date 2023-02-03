@@ -19,6 +19,7 @@ from visualization import (
 
 
 def normalized(vector: np.ndarray) -> np.ndarray:
+    assert vector.ndim == 1
     return vector / np.linalg.norm(vector)
 
 
