@@ -42,27 +42,27 @@ def multiply_transform(
 
 
 @torch.jit.script
-def rotation_matrix_from_quaternion(q):
+def rotation_matrix_from_quaternion(quat):
     """
     Construct rotation matrix from quaternion
     """
     # Shortcuts for individual elements (using wikipedia's convention)
-    qr, qi, qj, qk = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+    w, x, y, z = quat[..., 0], quat[..., 1], quat[..., 2], quat[..., 3]
 
     # Set individual elements
-    R00 = 1.0 - 2.0 * (qj**2 + qk**2)
-    R01 = 2 * (qi * qj - qk * qr)
-    R02 = 2 * (qi * qk + qj * qr)
-    R10 = 2 * (qi * qj + qk * qr)
-    R11 = 1.0 - 2.0 * (qi**2 + qk**2)
-    R12 = 2 * (qj * qk - qi * qr)
-    R20 = 2 * (qi * qk - qj * qr)
-    R21 = 2 * (qj * qk + qi * qr)
-    R22 = 1.0 - 2.0 * (qi**2 + qj**2)
+    R00 = 1.0 - 2.0 * (y**2 + z**2)
+    R01 = 2 * (x * y - z * w)
+    R02 = 2 * (x * z + y * w)
+    R10 = 2 * (x * y + z * w)
+    R11 = 1.0 - 2.0 * (x**2 + z**2)
+    R12 = 2 * (y * z - x * w)
+    R20 = 2 * (x * z - y * w)
+    R21 = 2 * (y * z + x * w)
+    R22 = 1.0 - 2.0 * (x**2 + y**2)
 
     R0 = torch.stack([R00, R01, R02], dim=-1)
     R1 = torch.stack([R10, R11, R12], dim=-1)
-    R2 = torch.stack([R10, R21, R22], dim=-1)
+    R2 = torch.stack([R20, R21, R22], dim=-1)
 
     R = torch.stack([R0, R1, R2], dim=-2)
 
