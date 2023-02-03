@@ -140,9 +140,109 @@ def angle_tensor_to_dict(angles: torch.Tensor | np.ndarray) -> Dict[str, float]:
 
 
 class ShadowHandModule(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, side: str = "right") -> None:
         super().__init__()
+        assert side in ["right", "left"]
 
+        if side == "right":
+            nodes, joints = self.create_right_hand_nodes_and_joints()
+        else:
+            nodes, joints = self.create_left_hand_nodes_and_joints()
+
+        thbase_quat = torch.Tensor(nodes[23].quat)
+        thdistal_quat = torch.Tensor(nodes[27].quat)
+
+        thbase_rotation = rotation_matrix_from_quaternion(thbase_quat)
+        thdistal_rotation = rotation_matrix_from_quaternion(thdistal_quat)
+
+        self.thbase_rotation = nn.Parameter(thbase_rotation, requires_grad=False)
+        self.thdistal_rotation = nn.Parameter(thdistal_rotation, requires_grad=False)
+
+        self.nodes = nodes
+        self.joints = joints
+
+        self.dof: int = len(joints)
+
+        axes = torch.stack([torch.tensor(j.axis) for j in joints], dim=0)
+        self.axes = nn.Parameter(axes, requires_grad=False)
+
+        min_rad = torch.tensor([j.min_rad for j in joints])
+        max_rad = torch.tensor([j.max_rad for j in joints])
+        self.min_rad = nn.Parameter(min_rad, requires_grad=False)
+        self.max_rad = nn.Parameter(max_rad, requires_grad=False)
+
+        translation = torch.stack([torch.tensor(n.translation) for n in nodes], dim=0)
+        self.translation = nn.Parameter(translation, requires_grad=False)
+
+    @staticmethod
+    def create_left_hand_nodes_and_joints() -> Tuple[List[Node], List[Joint]]:
+        """Create nodes and joints for left hand."""
+        nodes: List[Node] = []
+        joints: List[Joint] = []
+
+        nodes.append(Node("wrist", -1, [0.0, 0.0, 0.0]))
+        nodes.append(Node("palm", 0, [0.0, 0.0, 0.0340]))
+        nodes.append(Node("ffknuckle", 1, [-0.0330, 0.0, 0.0950]))
+        nodes.append(Node("ffproximal", 2, [0.0, 0.0, 0.0]))
+        nodes.append(Node("ffmiddle", 3, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("ffdistal", 4, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("fftip", 5, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("mfknuckle", 1, [-0.0110, 0.0, 0.0990]))
+        nodes.append(Node("mfproximal", 7, [0.0, 0.0, 0.0]))
+        nodes.append(Node("mfmiddle", 8, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("mfdistal", 9, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("mftip", 10, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("rfknuckle", 1, [0.0110, 0.0, 0.0950]))
+        nodes.append(Node("rfproximal", 12, [0.0, 0.0, 0.0]))
+        nodes.append(Node("rfmiddle", 13, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("rfdistal", 14, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("rftip", 15, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("lfmetacarpal", 1, [0.0330, 0.0, 0.02071]))
+        nodes.append(Node("lfknuckle", 17, [0.0, 0.0, 0.06579]))
+        nodes.append(Node("lfproximal", 18, [0.0, 0.0, 0.0]))
+        nodes.append(Node("lfmiddle", 19, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("lfdistal", 20, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("lftip", 21, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("thbase", 1, [-0.0340, -0.0085, 0.0290]))
+        nodes.append(Node("thproximal", 23, [0.0, 0.0, 0.0]))
+        nodes.append(Node("thhub", 24, [0.0, 0.0, 0.0380]))
+        nodes.append(Node("thmiddle", 25, [0.0, 0.0, 0.0]))
+        nodes.append(Node("thdistal", 26, [0.0, 0.0, 0.0320]))
+        nodes.append(Node("thtip", 27, [0.0, 0.0, 0.0275]))
+
+        nodes[23].quat = [0.0, 0.382683, 0.0, -0.92388]
+        nodes[27].quat = [0.707107, 0.0, 0.0, -0.707107]
+
+        joints.append(Joint("WRJ2", 0, [0.0, 1.0, 0.0], -0.523599, 0.174533))
+        joints.append(Joint("WRJ1", 1, [1.0, 0.0, 0.0], -0.698132, 0.488692))
+        joints.append(Joint("FFJ4", 2, [0.0, 1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("FFJ3", 3, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("FFJ2", 4, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("FFJ1", 5, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("MFJ4", 7, [0.0, 1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("MFJ3", 8, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("MFJ2", 9, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("MFJ1", 10, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("RFJ4", 12, [0.0, -1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("RFJ3", 13, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("RFJ2", 14, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("RFJ1", 15, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("LFJ5", 17, [0.573576, 0.0, -0.819152], 0.0, 0.785398))
+        joints.append(Joint("LFJ4", 18, [0.0, -1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("LFJ3", 19, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("LFJ2", 20, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("LFJ1", 21, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("THJ5", 23, [0.0, 0.0, 1.0], -1.0472, 1.0472))
+        joints.append(Joint("THJ4", 24, [-1.0, 0.0, 0.0], 0.0, 1.22173))
+        joints.append(Joint("THJ3", 25, [1.0, 0.0, 0.0], -0.20944, 0.20944))
+        joints.append(Joint("THJ2", 26, [0.0, -1.0, 0.0], -0.698132, 0.698132))
+        joints.append(Joint("THJ1", 27, [1.0, 0.0, 0.0], 0.0, 1.5708))
+
+        return nodes, joints
+
+    @staticmethod
+    def create_right_hand_nodes_and_joints() -> Tuple[List[Node], List[Joint]]:
+        """Create nodes and joints for right hand."""
         nodes: List[Node] = []
         joints: List[Joint] = []
 
@@ -176,6 +276,9 @@ class ShadowHandModule(nn.Module):
         nodes.append(Node("thdistal", 26, [0.0, 0.0, 0.0320]))
         nodes.append(Node("thtip", 27, [0.0, 0.0, 0.0275]))
 
+        nodes[23].quat = [0.92388, 0.0, 0.382683, 0.0]
+        nodes[27].quat = [0.707107, 0.0, 0.0, -0.707107]
+
         joints.append(Joint("WRJ2", 0, [0.0, 1.0, 0.0], -0.523599, 0.174533))
         joints.append(Joint("WRJ1", 1, [1.0, 0.0, 0.0], -0.698132, 0.488692))
         joints.append(Joint("FFJ4", 2, [0.0, -1.0, 0.0], -0.349066, 0.349066))
@@ -201,30 +304,7 @@ class ShadowHandModule(nn.Module):
         joints.append(Joint("THJ2", 26, [0.0, -1.0, 0.0], -0.698132, 0.698132))
         joints.append(Joint("THJ1", 27, [1.0, 0.0, 0.0], 0.0, 1.5708))
 
-        thbase_quat = torch.Tensor([0.92388, 0.0, 0.382683, 0.0])
-        thdistal_quat = torch.Tensor([0.707107, 0.0, 0.0, -0.707107])
-
-        thbase_rotation = rotation_matrix_from_quaternion(thbase_quat)
-        thdistal_rotation = rotation_matrix_from_quaternion(thdistal_quat)
-
-        self.thbase_rotation = nn.Parameter(thbase_rotation, requires_grad=False)
-        self.thdistal_rotation = nn.Parameter(thdistal_rotation, requires_grad=False)
-
-        self.nodes = nodes
-        self.joints = joints
-
-        self.dof: int = len(joints)
-
-        axes = torch.stack([torch.tensor(j.axis) for j in joints], dim=0)
-        self.axes = nn.Parameter(axes, requires_grad=False)
-
-        min_rad = torch.tensor([j.min_rad for j in joints])
-        max_rad = torch.tensor([j.max_rad for j in joints])
-        self.min_rad = nn.Parameter(min_rad, requires_grad=False)
-        self.max_rad = nn.Parameter(max_rad, requires_grad=False)
-
-        translation = torch.stack([torch.tensor(n.translation) for n in nodes], dim=0)
-        self.translation = nn.Parameter(translation, requires_grad=False)
+        return nodes, joints
 
     def forward(self, angles: torch.Tensor) -> torch.Tensor:
         """Forward kinematics.
