@@ -41,6 +41,34 @@ def multiply_transform(
     return torch.matmul(R1, R2), torch.mv(R1, t2) + t1
 
 
+@torch.jit.script
+def rotation_matrix_from_quaternion(q):
+    """
+    Construct rotation matrix from quaternion
+    """
+    # Shortcuts for individual elements (using wikipedia's convention)
+    qr, qi, qj, qk = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+
+    # Set individual elements
+    R00 = 1.0 - 2.0 * (qj**2 + qk**2)
+    R01 = 2 * (qi * qj - qk * qr)
+    R02 = 2 * (qi * qk + qj * qr)
+    R10 = 2 * (qi * qj + qk * qr)
+    R11 = 1.0 - 2.0 * (qi**2 + qk**2)
+    R12 = 2 * (qj * qk - qi * qr)
+    R20 = 2 * (qi * qk - qj * qr)
+    R21 = 2 * (qj * qk + qi * qr)
+    R22 = 1.0 - 2.0 * (qi**2 + qj**2)
+
+    R0 = torch.stack([R00, R01, R02], dim=-1)
+    R1 = torch.stack([R10, R11, R12], dim=-1)
+    R2 = torch.stack([R10, R21, R22], dim=-1)
+
+    R = torch.stack([R0, R1, R2], dim=-2)
+
+    return R
+
+
 class Joint:
     name: str
     parent: int
@@ -62,11 +90,19 @@ class Node:
     name: str
     parent: int
     translation: List[float]
+    quat: Optional[List[float]] = None
 
-    def __init__(self, name: str, parent: int, translation: List[float]) -> None:
+    def __init__(
+        self,
+        name: str,
+        parent: int,
+        translation: List[float],
+        quat: Optional[List[float]] = None,
+    ) -> None:
         self.name = name
         self.parent = parent
         self.translation = translation
+        self.quat = quat
 
 
 def angle_tensor_to_dict(angles: torch.Tensor | np.ndarray) -> Dict[str, float]:
@@ -110,60 +146,69 @@ class ShadowHandModule(nn.Module):
         nodes: List[Node] = []
         joints: List[Joint] = []
 
-        nodes.append(Node("wrist", -1, [0.0000, 0.0000, 0.0000]))
-        nodes.append(Node("palm", 0, [0.0000, 0.0000, 0.0340]))
-        nodes.append(Node("ffknuckle", 1, [0.0330, 0.0000, 0.0950]))
-        nodes.append(Node("ffproximal", 2, [0.0000, 0.0000, 0.0000]))
-        nodes.append(Node("ffmiddle", 3, [0.0000, 0.0000, 0.0450]))
-        nodes.append(Node("ffdistal", 4, [0.0000, 0.0000, 0.0250]))
-        nodes.append(Node("fftip", 5, [0.0000, 0.0000, 0.0260]))
-        nodes.append(Node("mfknuckle", 1, [0.0110, 0.0000, 0.0990]))
-        nodes.append(Node("mfproximal", 7, [0.0000, 0.0000, 0.0000]))
-        nodes.append(Node("mfmiddle", 8, [0.0000, 0.0000, 0.0450]))
-        nodes.append(Node("mfdistal", 9, [0.0000, 0.0000, 0.0250]))
-        nodes.append(Node("mftip", 10, [0.0000, 0.0000, 0.0260]))
-        nodes.append(Node("rfknuckle", 1, [-0.0110, 0.0000, 0.0950]))
-        nodes.append(Node("rfproximal", 12, [0.0000, 0.0000, 0.0000]))
-        nodes.append(Node("rfmiddle", 13, [0.0000, 0.0000, 0.0450]))
-        nodes.append(Node("rfdistal", 14, [0.0000, 0.0000, 0.0250]))
-        nodes.append(Node("rftip", 15, [0.0000, 0.0000, 0.0260]))
-        nodes.append(Node("lfmetacarpal", 1, [-0.0170, 0.0000, 0.0440]))
-        nodes.append(Node("lfknuckle", 17, [-0.0170, 0.0000, 0.0440]))
-        nodes.append(Node("lfproximal", 18, [0.0000, 0.0000, 0.0000]))
-        nodes.append(Node("lfmiddle", 19, [0.0000, 0.0000, 0.0450]))
-        nodes.append(Node("lfdistal", 20, [0.0000, 0.0000, 0.0250]))
-        nodes.append(Node("lftip", 21, [0.0000, 0.0000, 0.0260]))
-        nodes.append(Node("thbase", 1, [0.0340, -0.0090, 0.0290]))
-        nodes.append(Node("thproximal", 23, [0.0000, 0.0000, 0.0000]))
-        nodes.append(Node("thhub", 24, [0.0000, 0.0000, 0.0380]))
-        nodes.append(Node("thmiddle", 25, [0.0000, 0.0000, 0.0000]))
-        nodes.append(Node("thdistal", 26, [0.0000, 0.0000, 0.0320]))
-        nodes.append(Node("thtip", 27, [0.0000, 0.0000, 0.0275]))
+        nodes.append(Node("wrist", -1, [0.0, 0.0, 0.0]))
+        nodes.append(Node("palm", 0, [0.0, 0.0, 0.0340]))
+        nodes.append(Node("ffknuckle", 1, [0.0330, 0.0, 0.0950]))
+        nodes.append(Node("ffproximal", 2, [0.0, 0.0, 0.0]))
+        nodes.append(Node("ffmiddle", 3, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("ffdistal", 4, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("fftip", 5, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("mfknuckle", 1, [0.0110, 0.0, 0.0990]))
+        nodes.append(Node("mfproximal", 7, [0.0, 0.0, 0.0]))
+        nodes.append(Node("mfmiddle", 8, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("mfdistal", 9, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("mftip", 10, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("rfknuckle", 1, [-0.0110, 0.0, 0.0950]))
+        nodes.append(Node("rfproximal", 12, [0.0, 0.0, 0.0]))
+        nodes.append(Node("rfmiddle", 13, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("rfdistal", 14, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("rftip", 15, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("lfmetacarpal", 1, [-0.0330, 0.0, 0.02071]))
+        nodes.append(Node("lfknuckle", 17, [0.0, 0.0, 0.06579]))
+        nodes.append(Node("lfproximal", 18, [0.0, 0.0, 0.0]))
+        nodes.append(Node("lfmiddle", 19, [0.0, 0.0, 0.0450]))
+        nodes.append(Node("lfdistal", 20, [0.0, 0.0, 0.0250]))
+        nodes.append(Node("lftip", 21, [0.0, 0.0, 0.0260]))
+        nodes.append(Node("thbase", 1, [0.0340, -0.0085, 0.0290]))
+        nodes.append(Node("thproximal", 23, [0.0, 0.0, 0.0]))
+        nodes.append(Node("thhub", 24, [0.0, 0.0, 0.0380]))
+        nodes.append(Node("thmiddle", 25, [0.0, 0.0, 0.0]))
+        nodes.append(Node("thdistal", 26, [0.0, 0.0, 0.0320]))
+        nodes.append(Node("thtip", 27, [0.0, 0.0, 0.0275]))
 
-        joints.append(Joint("WRJ1", 0, [0.0000, 1.0000, 0.0000], -0.4890, 0.1400))
-        joints.append(Joint("WRJ0", 1, [1.0000, 0.0000, 0.0000], -0.6890, 0.4890))
-        joints.append(Joint("FFJ3", 2, [0.0000, 1.0000, 0.0000], -0.3490, 0.3490))
-        joints.append(Joint("FFJ2", 3, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("FFJ1", 4, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("FFJ0", 5, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("MFJ3", 7, [0.0000, 1.0000, 0.0000], -0.3490, 0.3490))
-        joints.append(Joint("MFJ2", 8, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("MFJ1", 9, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("MFJ0", 10, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("RFJ3", 12, [0.0000, 1.0000, 0.0000], -0.3490, 0.3490))
-        joints.append(Joint("RFJ2", 13, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("RFJ1", 14, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("RFJ0", 15, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("LFJ4", 17, [0.5710, 0.0000, 0.8210], 0.0000, 0.7850))
-        joints.append(Joint("LFJ3", 18, [0.0000, 1.0000, 0.0000], -0.3490, 0.3490))
-        joints.append(Joint("LFJ2", 19, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("LFJ1", 20, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("LFJ0", 21, [1.0000, 0.0000, 0.0000], 0.0000, 1.5710))
-        joints.append(Joint("THJ4", 23, [0.0000, 0.0000, -1.0000], -1.0470, 1.0470))
-        joints.append(Joint("THJ3", 24, [1.0000, 0.0000, 0.0000], 0.0000, 1.2220))
-        joints.append(Joint("THJ2", 25, [1.0000, 0.0000, 0.0000], -0.2090, 0.2090))
-        joints.append(Joint("THJ1", 26, [0.0000, 1.0000, 0.0000], -0.5240, 0.5240))
-        joints.append(Joint("THJ0", 27, [0.0000, 1.0000, 0.0000], -1.5710, 0.0000))
+        joints.append(Joint("WRJ2", 0, [0.0, 1.0, 0.0], -0.523599, 0.174533))
+        joints.append(Joint("WRJ1", 1, [1.0, 0.0, 0.0], -0.698132, 0.488692))
+        joints.append(Joint("FFJ4", 2, [0.0, -1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("FFJ3", 3, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("FFJ2", 4, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("FFJ1", 5, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("MFJ4", 7, [0.0, -1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("MFJ3", 8, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("MFJ2", 9, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("MFJ1", 10, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("RFJ4", 12, [0.0, 1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("RFJ3", 13, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("RFJ2", 14, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("RFJ1", 15, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("LFJ5", 17, [0.573576, 0.0, 0.819152], 0.0, 0.785398))
+        joints.append(Joint("LFJ4", 18, [0.0, 1.0, 0.0], -0.349066, 0.349066))
+        joints.append(Joint("LFJ3", 19, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("LFJ2", 20, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("LFJ1", 21, [1.0, 0.0, 0.0], 0.0, 1.5708))
+        joints.append(Joint("THJ5", 23, [0.0, 0.0, -1.0], -1.0472, 1.0472))
+        joints.append(Joint("THJ4", 24, [1.0, 0.0, 0.0], 0.0, 1.22173))
+        joints.append(Joint("THJ3", 25, [1.0, 0.0, 0.0], -0.20944, 0.20944))
+        joints.append(Joint("THJ2", 26, [0.0, -1.0, 0.0], -0.698132, 0.698132))
+        joints.append(Joint("THJ1", 27, [1.0, 0.0, 0.0], 0.0, 1.5708))
+
+        thbase_quat = torch.Tensor([0.92388, 0.0, 0.382683, 0.0])
+        thdistal_quat = torch.Tensor([0.707107, 0.0, 0.0, -0.707107])
+
+        thbase_rotation = rotation_matrix_from_quaternion(thbase_quat)
+        thdistal_rotation = rotation_matrix_from_quaternion(thdistal_quat)
+
+        self.thbase_rotation = nn.Parameter(thbase_rotation, requires_grad=False)
+        self.thdistal_rotation = nn.Parameter(thdistal_rotation, requires_grad=False)
 
         self.nodes = nodes
         self.joints = joints
@@ -290,6 +335,7 @@ class ShadowHandModule(nn.Module):
             (rotation_palm, translation_palm),
             (rotation[..., 19, :, :], translation[..., 23, :]),
         )
+        rotation_thbase = torch.matmul(rotation_thbase, self.thbase_rotation)
         rotation_thproximal, translation_thproximal = multiply_transform(
             (rotation_thbase, translation_thbase),
             (rotation[..., 20, :, :], translation[..., 24, :]),
@@ -306,6 +352,7 @@ class ShadowHandModule(nn.Module):
             (rotation_thmiddle, translation_thmiddle),
             (rotation[..., 23, :, :], translation[..., 27, :]),
         )
+        rotation_thdistal = torch.matmul(rotation_thdistal, self.thdistal_rotation)
         translation_thtip = translation_thdistal + torch.mv(
             rotation_thdistal, translation[..., 28, :]
         )

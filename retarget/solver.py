@@ -78,8 +78,8 @@ class MotionMapper(object):
 
     def inequality_constraint(self, finger: str):
         assert finger in ["FF", "MF", "RF", "LF"]
-        distal_index = self.shadow_hand.index_of_joint(f"{finger}J0")
-        middle_index = self.shadow_hand.index_of_joint(f"{finger}J1")
+        distal_index = self.shadow_hand.index_of_joint(f"{finger}J1")
+        middle_index = self.shadow_hand.index_of_joint(f"{finger}J2")
 
         def constraint(x: np.ndarray, grad: np.ndarray) -> float:
             # distal joint should be less than middle joint
