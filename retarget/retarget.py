@@ -18,6 +18,37 @@ from visualization import (
 )
 
 
+def normalized(vector: np.ndarray) -> np.ndarray:
+    return vector / np.linalg.norm(vector)
+
+
+def extend_pinky(keypoints: np.ndarray) -> np.ndarray:
+    """Extends the pinky finger to the length of mean of the other three fingers."""
+    assert keypoints.shape == (21, 3)
+    pinky = keypoints[17:21, :].copy()
+
+    index = keypoints[5:9, :]
+    middle = keypoints[9:13, :]
+    ring = keypoints[13:17, :]
+
+    fingers = np.stack([index, middle, ring], axis=0)
+
+    proximal = np.mean(np.linalg.norm(fingers[:, 1, :] - fingers[:, 0, :], axis=1))
+    intermediate = np.mean(np.linalg.norm(fingers[:, 2, :] - fingers[:, 1, :], axis=1))
+    distal = np.mean(np.linalg.norm(fingers[:, 3, :] - fingers[:, 2, :], axis=1))
+
+    proximal_direction = normalized(pinky[1, :] - pinky[0, :])
+    intermediate_direction = normalized(pinky[2, :] - pinky[1, :])
+    distal_direction = normalized(pinky[3, :] - pinky[2, :])
+
+    pinky[1, :] = pinky[0, :] + proximal * proximal_direction
+    pinky[2, :] = pinky[1, :] + intermediate * intermediate_direction
+    pinky[3, :] = pinky[2, :] + distal * distal_direction
+
+    keypoints = np.concatenate([keypoints[:17, :].copy(), pinky], axis=0)
+    return keypoints
+
+
 def filter_position_sequence(position_seq: np.ndarray, wn=5, fs=25):
     sos = signal.butter(2, wn, "lowpass", fs=fs, output="sos", analog=False)
     seq_shape = position_seq.shape
@@ -115,6 +146,7 @@ if __name__ == "__main__":
     velocity_filter = VelocityFilter(5, 5)
     for i in range(target.shape[0]):
         target[i] = velocity_filter(target[i])
+        target[i] = extend_pinky(target[i])
     # plot_hand_motion_keypoints(target, "target_glove_1.gif")
     # exit(0)
 
