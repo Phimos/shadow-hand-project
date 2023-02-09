@@ -1,0 +1,128 @@
+<launch>
+  <arg name="serial_no_camera1"    			default="125322061389"/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera2"    			default="125322064398"/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera3"    			default=""/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera4"    			default=""/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="camera1"              			default="camera1"/>		<!-- Note: Replace with camera name -->
+  <arg name="camera2"              			default="camera2"/>		<!-- Note: Replace with camera name -->
+  <arg name="camera3"              			default="camera3"/>		<!-- Note: Replace with camera name -->
+  <arg name="camera4"              			default="camera4"/>		<!-- Note: Replace with camera name -->
+  <arg name="tf_prefix_camera1"         default="$(arg camera1)"/>
+  <arg name="tf_prefix_camera2"         default="$(arg camera2)"/>
+  <arg name="tf_prefix_camera3"         default="$(arg camera3)"/>
+  <arg name="tf_prefix_camera4"         default="$(arg camera4)"/>
+
+  <arg name="width"                     default="640"/>
+  <arg name="height"                    default="480"/>
+  <arg name="fps"                       default="30"/>
+
+  <arg name="depth_width"               default="$(arg width)"/>
+  <arg name="depth_height"              default="$(arg height)"/>
+  <arg name="depth_fps"                 default="$(arg fps)"/>
+
+  <arg name="color_width"               default="$(arg width)"/>
+  <arg name="color_height"              default="$(arg height)"/>
+  <arg name="color_fps"                 default="$(arg fps)"/>
+
+  <arg name="initial_reset"             default="false"/>
+  <arg name="reconnect_timeout"         default="6.0"/>
+  <arg name="enable_sync"               default="true"/>
+  <arg name="align_depth"               default="true"/>
+  <arg name="filters"                   default="spatial, temporal, pointcloud"/>
+
+  <!-- Start Multiple Cameras -->
+  <group ns="$(arg camera1)">
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="serial_no"             value="$(arg serial_no_camera1)"/>
+      <arg name="tf_prefix"         		value="$(arg tf_prefix_camera1)"/>
+
+      <arg name="depth_width"           value="$(arg depth_width)"/>
+      <arg name="depth_height"          value="$(arg depth_height)"/>
+      <arg name="depth_fps"             value="$(arg depth_fps)"/>
+
+      <arg name="color_width"           value="$(arg color_width)"/>
+      <arg name="color_height"          value="$(arg color_height)"/>
+      <arg name="color_fps"             value="$(arg color_fps)"/>
+
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+      <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>
+      <arg name="enable_sync"           value="$(arg enable_sync)"/>
+      <arg name="align_depth"           value="$(arg align_depth)"/>
+      <arg name="filters"               value="$(arg filters)"/>
+    </include>
+  </group>
+
+  <group ns="$(arg camera2)">
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="serial_no"             value="$(arg serial_no_camera2)"/>
+      <arg name="tf_prefix"		          value="$(arg tf_prefix_camera2)"/>
+
+      <arg name="depth_width"           value="$(arg depth_width)"/>
+      <arg name="depth_height"          value="$(arg depth_height)"/>
+      <arg name="depth_fps"             value="$(arg depth_fps)"/>
+
+      <arg name="color_width"           value="$(arg color_width)"/>
+      <arg name="color_height"          value="$(arg color_height)"/>
+      <arg name="color_fps"             value="$(arg color_fps)"/>
+
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+      <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>      
+      <arg name="enable_sync"           value="$(arg enable_sync)"/>
+      <arg name="align_depth"           value="$(arg align_depth)"/>
+      <arg name="filters"               value="$(arg filters)"/>
+    </include>
+  </group>
+
+  <group ns="$(arg camera3)" if="$(eval serial_no_camera3 != '')">
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="serial_no"             value="$(arg serial_no_camera3)"/>
+      <arg name="tf_prefix"		          value="$(arg tf_prefix_camera3)"/>
+
+      <arg name="depth_width"           value="$(arg depth_width)"/>
+      <arg name="depth_height"          value="$(arg depth_height)"/>
+      <arg name="depth_fps"             value="$(arg depth_fps)"/>
+
+      <arg name="color_width"           value="$(arg color_width)"/>
+      <arg name="color_height"          value="$(arg color_height)"/>
+      <arg name="color_fps"             value="$(arg color_fps)"/>
+
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+      <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>
+      <arg name="enable_sync"           value="$(arg enable_sync)"/>
+      <arg name="align_depth"           value="$(arg align_depth)"/>
+      <arg name="filters"               value="$(arg filters)"/>
+    </include>
+  </group>
+
+  <group ns="$(arg camera4)" if="$(eval serial_no_camera4 != '')">
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="serial_no"             value="$(arg serial_no_camera4)"/>
+      <arg name="tf_prefix"		          value="$(arg tf_prefix_camera4)"/>
+
+      <arg name="depth_width"           value="$(arg depth_width)"/>
+      <arg name="depth_height"          value="$(arg depth_height)"/>
+      <arg name="depth_fps"             value="$(arg depth_fps)"/>
+
+      <arg name="color_width"           value="$(arg color_width)"/>
+      <arg name="color_height"          value="$(arg color_height)"/>
+      <arg name="color_fps"             value="$(arg color_fps)"/>
+
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+      <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>
+      <arg name="enable_sync"           value="$(arg enable_sync)"/>
+      <arg name="align_depth"           value="$(arg align_depth)"/>
+      <arg name="filters"               value="$(arg filters)"/>
+    </include>
+  </group>
+
+  <!-- Save frames to rosbag -->
+  <!-- <node pkg="rosbag" type="record" name="rs_rosbag_record" args="-a -O $(arg bag_file)" if="$(arg record_bag)" /> -->
+
+  <!-- TF Static Transform Publishers -->
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0.7 0.4 0.0 -1.57 0 0 $(arg camera2)_link $(arg camera1)_link 100" />
+  <!-- <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0.7 -0.4 0.0 1.57 0 0 $(arg camera3)_link $(arg camera1)_link 100" /> -->
+  <!-- <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0.7 -1.2 0.0 1.57 0 0 $(arg camera4)_link $(arg camera1)_link 100" /> -->
+
+  <!-- Start RViz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find realsense2_camera)/rviz/multiple_d415.rviz" output="screen"/>
+</launch>
