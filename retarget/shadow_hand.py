@@ -42,7 +42,7 @@ def multiply_transform(
 
 
 @torch.jit.script
-def rotation_matrix_from_quaternion(quat):
+def rotation_matrix_from_quaternion(quat: torch.Tensor) -> torch.Tensor:
     """
     Construct rotation matrix from quaternion
     """
@@ -413,9 +413,9 @@ class ShadowHandModule(nn.Module):
 
         rotation_thbase, translation_thbase = multiply_transform(
             (rotation_palm, translation_palm),
-            (rotation[..., 19, :, :], translation[..., 23, :]),
+            (self.thbase_rotation, translation[..., 23, :]),
         )
-        rotation_thbase = torch.matmul(rotation_thbase, self.thbase_rotation)
+        rotation_thbase = torch.matmul(rotation_thbase, rotation[..., 19, :, :])
         rotation_thproximal, translation_thproximal = multiply_transform(
             (rotation_thbase, translation_thbase),
             (rotation[..., 20, :, :], translation[..., 24, :]),
@@ -430,9 +430,9 @@ class ShadowHandModule(nn.Module):
         )
         rotation_thdistal, translation_thdistal = multiply_transform(
             (rotation_thmiddle, translation_thmiddle),
-            (rotation[..., 23, :, :], translation[..., 27, :]),
+            (self.thdistal_rotation, translation[..., 27, :]),
         )
-        rotation_thdistal = torch.matmul(rotation_thdistal, self.thdistal_rotation)
+        rotation_thdistal = torch.matmul(rotation_thdistal, rotation[..., 23, :, :])
         translation_thtip = translation_thdistal + torch.mv(
             rotation_thdistal, translation[..., 28, :]
         )
