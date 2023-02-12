@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -105,7 +105,7 @@ class Node:
         self.quat = quat
 
 
-def angle_tensor_to_dict(angles: torch.Tensor | np.ndarray) -> Dict[str, float]:
+def angle_tensor_to_dict(angles: Union[torch.Tensor, np.ndarray]) -> Dict[str, float]:
     assert isinstance(angles, torch.Tensor) or isinstance(angles, np.ndarray)
     if isinstance(angles, torch.Tensor):
         angles = angles.detach().cpu().numpy()
