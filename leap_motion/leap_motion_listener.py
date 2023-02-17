@@ -1,5 +1,6 @@
 import sys
 
+sys.path.append('/home/wangqx/leap-sdk-python3')
 import Leap
 import numpy as np
 

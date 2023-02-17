@@ -45,7 +45,7 @@ def plot_hand_motion_keypoints(keypoints: np.ndarray, path: Optional[str] = None
     lines = HAND_VISULIZATION_LINKS
 
     fig = plt.figure()
-    ax = Axes3D(fig, auto_add_to_figure=False)
+    ax = Axes3D(fig)
     fig.add_axes(ax)
 
     def update(frame):
