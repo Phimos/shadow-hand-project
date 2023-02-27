@@ -82,8 +82,9 @@ def create_point_cloud(
 pcds = []
 # for name, intrinsic in intrinsics.items():
 for name, camera in multiview.named_cameras:
-    filepath_depth = dataset_dir / name / "depth" / "1673601622338.png"
-    filepath_color = dataset_dir / name / "color" / "1673601622338.png"
+    filepath_depth = dataset_dir / name / "depth" / "1677405876725.png"
+    filepath_color = dataset_dir / name / "color" / "1677405876725.png"
+    print(filepath_color)
     # filepath_depth = dataset_dir / name / "image_depth" / "1672997458773.png"
     # filepath_color = dataset_dir / name / "image_color" / "1672997458773.png"
 

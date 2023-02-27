@@ -1,0 +1,92 @@
+INFO - Using boards:
+INFO - charuco CharucoBoard {type='charuco', aruco_dict='4X4_1000', aruco_offset=0, size=(8, 11), num_ids=44, marker_length=0.024, square_length=0.032, aruco_params={}}
+INFO - Found camera directories ['cam0', 'cam1', 'cam2', 'cam3'] with 25 matching images
+INFO - Loading images..
+INFO - Loaded 100 images
+INFO - {'cam0': (1280, 720), 'cam1': (1280, 720), 'cam2': (1280, 720), 'cam3': (1280, 720)}
+INFO - Detecting boards..
+INFO - Writing detection cache to ./calibration.detections.pkl
+INFO - Detected point counts:
+INFO - Total: 1998, cameras: {'cam0': 496, 'cam1': 530, 'cam2': 508, 'cam3': 464}, Boards: {'charuco': 1998}
+INFO - Cameras set...
+INFO - cam0 Camera {'dist': array([[ 0.0167,  0.0705,  0.0013,  0.0016, -0.4444]]),
+        'image_size': (1280, 720),
+        'intrinsic': array([[939.685 ,   0.    , 639.4982],
+              [  0.    , 968.2134, 359.4704],
+              [  0.    ,   0.    ,   1.    ]])}
+INFO - 
+INFO - cam1 Camera {'dist': array([[ 0.1266, -0.2737,  0.0066, -0.0029, -0.0915]]),
+        'image_size': (1280, 720),
+        'intrinsic': array([[924.1268,   0.    , 639.4402],
+              [  0.    , 914.6029, 337.5111],
+              [  0.    ,   0.    ,   1.    ]])}
+INFO - 
+INFO - cam2 Camera {'dist': array([[ 0.0084,  0.0336,  0.0023,  0.0004, -0.3458]]),
+        'image_size': (1280, 720),
+        'intrinsic': array([[930.7394,   0.    , 639.5455],
+              [  0.    , 925.3438, 359.4997],
+              [  0.    ,   0.    ,   1.    ]])}
+INFO - 
+INFO - cam3 Camera {'dist': array([[ 0.0128,  0.0415,  0.0022,  0.0002, -0.4447]]),
+        'image_size': (1280, 720),
+        'intrinsic': array([[948.6254,   0.    , 639.3741],
+              [  0.    , 971.5739, 359.4095],
+              [  0.    ,   0.    ,   1.    ]])}
+INFO - 
+INFO - Pose counts:
+INFO - Total: 56, cameras: {'cam0': 15, 'cam1': 15, 'cam2': 15, 'cam3': 11}, Boards: {'charuco': 56}
+INFO - Overlaps by camera:
+INFO - [[  0. 169. 253. 201.]
+        [169.   0. 282. 126.]
+        [253. 282.   0. 107.]
+        [201. 126. 107.   0.]]
+INFO - Selected master 2 and pairs [(2, 1), (2, 0), (0, 3)]
+INFO - Estimate transform axis=0, pair (2, 1), inliers 11/11
+INFO - RMS (frobius): 0.0305 (0.0305) (deg): 0.9949 (0.9949) (trans): 0.0121 (0.0121)
+INFO - [[-0.9908 -0.135   0.001  -0.0948]
+        [ 0.0286 -0.2023  0.9789 -1.1004]
+        [-0.132   0.97    0.2043  0.9435]
+        [ 0.      0.      0.      1.    ]]
+INFO - Estimate transform axis=0, pair (2, 0), inliers 10/10
+INFO - RMS (frobius): 0.0296 (0.0296) (deg): 1.0546 (1.0546) (trans): 0.0229 (0.0229)
+INFO - [[ 0.1024 -0.8292  0.5495 -0.6488]
+        [ 0.7505  0.427   0.5044 -0.6219]
+        [-0.6529  0.3608  0.666   0.3923]
+        [ 0.      0.      0.      1.    ]]
+INFO - Estimate transform axis=0, pair (0, 3), inliers 8/8
+INFO - RMS (frobius): 0.0357 (0.0357) (deg): 1.2485 (1.2485) (trans): 0.0223 (0.0223)
+INFO - [[-0.9954 -0.0764 -0.0583  0.1137]
+        [-0.0408 -0.2131  0.9762 -1.1886]
+        [-0.087   0.974   0.209   1.0073]
+        [ 0.      0.      0.      1.    ]]
+INFO - Overlaps by board:
+INFO - [[0.]]
+INFO - Selected master 0 and pairs []
+INFO - Initialisation reprojection RMS=4.857, n=1998, quantiles=[ 0.008   0.3917  2.1678  4.8488 21.4306]
+INFO - Beginning adjustments (3) enabled: {cameras=False, boards=False, camera_poses=True, board_poses=True, motion=True}, options: {'loss': 'linear', 'tolerance': 0.0001}
+INFO - Adjust_outliers 0: reprojection RMS=4.857, n=1998, quantiles=[ 0.008   0.3917  2.1678  4.8488 21.4306]
+INFO - Rejecting 0 outliers with error > 24.24 pixels, keeping 1998 / 1998 inliers, (100.00%)
+INFO - Iteration     Total nfev        Cost      Cost reduction    Step norm     Optimality
+INFO - 0              1         2.3565e+04                                    1.76e+06
+INFO - 1              2         4.3005e+02      2.31e+04       8.55e-02       2.01e+04
+INFO - 2              3         4.2801e+02      2.04e+00       2.40e-03       3.74e+01
+INFO - 3              4         4.2801e+02      5.82e-05       4.60e-05       2.94e+00
+INFO - `ftol` termination condition is satisfied.
+INFO - Function evaluations 4, initial cost 2.3565e+04, final cost 4.2801e+02, first-order optimality 2.94e+00.
+INFO - Adjust_outliers 1: reprojection RMS=0.655 (0.655), n=1998 (1998), quantiles=[0.0091 0.2829 0.4603 0.7497 2.3939]
+INFO - Rejecting 0 outliers with error > 3.75 pixels, keeping 1998 / 1998 inliers, (100.00%)
+INFO - Iteration     Total nfev        Cost      Cost reduction    Step norm     Optimality
+INFO - 0              1         4.2801e+02                                    2.94e+00
+INFO - 1              2         4.2801e+02      3.49e-06       1.13e-05       2.52e+00
+INFO - `ftol` termination condition is satisfied.
+INFO - Function evaluations 2, initial cost 4.2801e+02, final cost 4.2801e+02, first-order optimality 2.52e+00.
+INFO - Adjust_outliers 2: reprojection RMS=0.655 (0.655), n=1998 (1998), quantiles=[0.0091 0.2829 0.4603 0.7497 2.3939]
+INFO - Rejecting 0 outliers with error > 3.75 pixels, keeping 1998 / 1998 inliers, (100.00%)
+INFO - Iteration     Total nfev        Cost      Cost reduction    Step norm     Optimality
+INFO - 0              1         4.2801e+02                                    2.53e+00
+INFO - 1              2         4.2801e+02      1.09e-06       6.44e-06       1.15e+00
+INFO - `ftol` termination condition is satisfied.
+INFO - Function evaluations 2, initial cost 4.2801e+02, final cost 4.2801e+02, first-order optimality 1.15e+00.
+INFO - Adjust_outliers end: reprojection RMS=0.655 (0.655), n=1998 (1998), quantiles=[0.0091 0.2829 0.4603 0.7498 2.3938]
+INFO - Exporting calibration to ./calibration.json
+INFO - Dumping state and history to ./calibration.pkl

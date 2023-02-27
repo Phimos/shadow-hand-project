@@ -149,32 +149,40 @@ class MultiCameraManager(object):
             
             print(i, timestamp)
 
-            depth_frames.append(frames.get_depth_frame())
-            color_frames.append(frames.get_color_frame())
-
-        timestamp = timestamps[0]
-        for i, frame in enumerate(color_frames):
-            if not frame.is_frame():
-                continue
-            frame = self.frame_to_array(frame)
-            cv2.imwrite(
-                str(
-                    self.workspace.get_camera_color_dir(self.serial_numbers[i])
-                    / f"{timestamp}.png"
-                ),
-                frame,
-            )
-        for i, frame in enumerate(depth_frames):
-            if not frame.is_frame():
-                continue
-            frame = self.frame_to_array(frame)
-            cv2.imwrite(
-                str(
-                    self.workspace.get_camera_depth_dir(self.serial_numbers[i])
-                    / f"{timestamp}.png"
-                ),
-                frame,
-            )
+            # depth_frames.append(frames.get_depth_frame())
+            # color_frames.append(frames.get_color_frame())
+            depth_frame = self.frame_to_array(frames.get_depth_frame())
+            color_frame = self.frame_to_array(frames.get_color_frame()) 
+            depth_frames.append(depth_frame)
+            color_frames.append(color_frame)
+            
+            cv2.imshow(f"frame_{i}", color_frame)
+        
+        k = cv2.waitKey(1) & 0xFF
+        if k == ord('c'):
+            timestamp = timestamps[0]
+            for i, frame in enumerate(color_frames):
+                # if not frame.is_frame():
+                #     continue
+                # frame = self.frame_to_array(frame)
+                cv2.imwrite(
+                    str(
+                        self.workspace.get_camera_color_dir(self.serial_numbers[i])
+                        / f"{timestamp}.png"
+                    ),
+                    frame,
+                )
+            for i, frame in enumerate(depth_frames):
+                # if not frame.is_frame():
+                #     continue
+                # frame = self.frame_to_array(frame)
+                cv2.imwrite(
+                    str(
+                        self.workspace.get_camera_depth_dir(self.serial_numbers[i])
+                        / f"{timestamp}.png"
+                    ),
+                    frame,
+                )
 
         return depth_frames, color_frames
 
