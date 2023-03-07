@@ -83,17 +83,21 @@ class Track:
         cv2.imshow("Adaptive Threshold", image)
         cv2.waitKey(0)
         if 3 in save:
-            cv2.imwrite('2'+'_'+'3'+'.jpeg',image)
+            cv2.imwrite('{}_{}{}'.format(str(time.time())[-4:],'3','.jpeg'),image)
 
 
         image = cv2.Canny(image, 80, 200, apertureSize=3)
         cv2.imshow("Canny", image)
         cv2.waitKey(0)
+        if 4 in save:
+            cv2.imwrite('{}_{}{}'.format(str(time.time())[-4:],'4','.jpeg'),image)
 
         element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
         image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, element)
         cv2.imshow("Morphology", image)
         cv2.waitKey(0)
+        if 5 in save:
+            cv2.imwrite('{}_{}{}'.format(str(time.time())[-4:],'5','.jpeg'),image)
 
         find_image = np.zeros_like(image)
         contours, hierarchy = cv2.findContours(
@@ -112,6 +116,8 @@ class Track:
 
         cv2.imshow("Contours", find_image)
         cv2.waitKey(0)
+        if 6 in save:
+            cv2.imwrite('{}_{}{}'.format(str(time.time())[-4:],'6','.jpeg'),find_image)
 
         # circle_image = original.copy()
         circle_image = find_image.copy()
@@ -133,6 +139,8 @@ class Track:
             circle_image = cv2.ellipse(circle_image, (center, size, angle), 255, 2)
         cv2.imshow("Circle", circle_image)
         cv2.waitKey(0)
+        if 7 in save:
+            cv2.imwrite('{}_{}{}'.format(str(time.time())[-4:],'7','.jpeg'),circle_image)
 
 def shoot(save:int)-> np.ndarray:
     """shoot an image
@@ -183,4 +191,4 @@ def shoot(save:int)-> np.ndarray:
     return np.array(frame_data)
 
 if __name__ == '__main__':
-    Track.visualize('1678111200476.8838.jpeg',0,(3,))
+    Track.visualize('1678111200476.8838.jpeg',0,(3,7))
