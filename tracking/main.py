@@ -1,6 +1,8 @@
 from typing import Tuple
 
 import cv2
+import sys
+import os
 import numpy as np
 
 
@@ -50,7 +52,11 @@ def error_ellipse_fitting(
 
 
 if __name__ == "__main__":
-    image: np.ndarray = cv2.imread("cup3.jpeg")
+    print(sys.argv[0])
+    os.chdir("./tracking")
+    
+    image: np.ndarray = cv2.imread("1678111200476.8838.jpeg")
+    print(image.shape)
     cv2.imshow("Original", image)
     cv2.waitKey(0)
 

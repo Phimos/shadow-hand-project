@@ -1,0 +1,19 @@
+INFO - Intrinsic(paths=PathOpts(name='intrinsic', output_path=None, master=None, image_path='.', boards='charuco.yaml', camera_pattern=None, cameras=[], limit_images=200), camera=CameraOpts(fix_aspect=False, allow_skew=False, distortion_model='standard', motion_model='static', isFisheye=False, calibration=None, limit_intrinsic=50), runtime=RuntimeOpts(num_threads=15, log_level='INFO', no_cache=False, seed=0))
+INFO - Finding images in .
+INFO - Found camera directories [] with 0 matching images
+INFO - Found camera directories with images {}
+INFO - Using boards:
+INFO - charuco CharucoBoard {type='charuco', aruco_dict='4X4_1000', aruco_offset=0, size=(8, 11), num_ids=44, marker_length=0.01875, square_length=0.025, aruco_params={}}
+INFO - Loading images..
+INFO - {}
+INFO - Detecting boards..
+INFO - Writing detection cache to .intrinsic/detections.pkl
+INFO - Intrinsic(paths=PathOpts(name='intrinsic', output_path=None, master=None, image_path='.', boards='charuco.yaml', camera_pattern=None, cameras=[], limit_images=200), camera=CameraOpts(fix_aspect=False, allow_skew=False, distortion_model='standard', motion_model='static', isFisheye=False, calibration=None, limit_intrinsic=50), runtime=RuntimeOpts(num_threads=15, log_level='INFO', no_cache=False, seed=0))
+INFO - Finding images in .
+INFO - Found camera directories [] with 0 matching images
+INFO - Found camera directories with images {}
+INFO - Using boards:
+INFO - charuco CharucoBoard {type='charuco', aruco_dict='4X4_1000', aruco_offset=0, size=(8, 11), num_ids=44, marker_length=0.01875, square_length=0.025, aruco_params={}}
+INFO - Loading images..
+INFO - {}
+INFO - Loaded detections from .intrinsic/detections.pkl
