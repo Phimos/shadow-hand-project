@@ -1,4 +1,5 @@
 import glob
+from ntpath import join
 import os
 import time
 from typing import List, Optional, Tuple
@@ -16,10 +17,38 @@ from visualization import (
     plot_hand_motion_keypoints,
     plot_two_hands_motion_keypoints,
 )
+from std_msgs.msg import Float64MultiArray
+import rospy
+import _thread
 
+joint=np.random.rand(21,3)
+solver = MotionMapper()
+
+velocity_filter = VelocityFilter(5, 5)
+
+def optimize(target):
+    global solver
+    zero_keypoints = solver.get_zero_pose() # 21 3
+    scale_factor = calc_scale_factor(target, zero_keypoints)
+    target *= scale_factor
+    print("scale factor", scale_factor)
+
+    _, R, t = best_fit_transform(
+            target[[0, 5, 9, 13]],
+            zero_keypoints[[0, 5, 9, 13]],
+        )
+    # print(R.shape, t.shape, target[i].shape)
+    target = (R @ target.T).T + t
+    target += zero_keypoints[[5, 9, 13]].mean(axis=0) - target[
+             [5, 9, 13]
+        ].mean(axis=0)
+
+    global velocity_filter
+    target = velocity_filter(target)
+    target = extend_pinky(target)
+    return solver.step(target)
 
 def normalized(vector: np.ndarray) -> np.ndarray:
-    assert vector.ndim == 1
     return vector / np.linalg.norm(vector)
 
 
@@ -48,6 +77,24 @@ def extend_pinky(keypoints: np.ndarray) -> np.ndarray:
 
     keypoints = np.concatenate([keypoints[:17, :].copy(), pinky], axis=0)
     return keypoints
+
+
+# thread publisher
+def thread_publisher(thredName):
+    pub = rospy.Publisher('hand_joint_value', Float64MultiArray, queue_size=1000)
+    rate=rospy.Rate(10)
+    count=0
+
+    while not rospy.is_shutdown():
+
+        latest=optimize(joint)
+        latest=latest.tolist()
+        mess=Float64MultiArray(data=latest)
+        pub.publish(mess)
+        count+=1
+        rate.sleep()
+
+
 
 
 def filter_position_sequence(position_seq: np.ndarray, wn=5, fs=25):
@@ -82,88 +129,39 @@ def calc_scale_factor(source: np.ndarray, target: np.ndarray) -> float:
     return np.sum(target_lengths) / np.sum(source_lengths)
 
 
+
+
+def callback(data):
+    global joint
+    joint=data.data
+    joint=list(joint)
+    joint=np.array(joint).reshape((21,3))
+    print(joint)
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
-    filenames = glob.glob("hand_pose/*joint*.npy")
-    filenames = natsorted(filenames)
-    target = np.stack([np.load(filename) for filename in filenames])
+    # filenames = glob.glob("/home/user/projects/shadow_robot/base/src/sr_interface/shadow-hand-project/retarget/hand_pose/*joint*.npy")
+    # filenames = natsorted(filenames)
+    # target = np.stack([np.load(filename) for filename in filenames])
 
-    target = np.load("leap_motion.npy")[::4]
+    # target = np.load("/home/user/projects/shadow_robot/base/src/sr_interface/shadow-hand-project/retarget/leap_motion.npy")[::4]
 
-    # target = np.load(
-    #     "/Users/pims/Downloads/MatlabVisualizeGloveData-master/data/HandData_apple_VR_5.npy"
-    # )
-    # target = target[::4]
-
-    target = target - target[:, 0:1, :]
+    # target = target - target[:, 0:1, :]
 
     # plot_hand_motion_keypoints(target)
 
-    links = [
-        ("palm", "thmiddle"),
-        ("palm", "ffmiddle"),
-        ("palm", "mfmiddle"),
-        ("palm", "rfmiddle"),
-        ("palm", "lfmiddle"),
-        ("palm", "thtip"),
-        ("palm", "fftip"),
-        ("palm", "mftip"),
-        ("palm", "rftip"),
-        ("palm", "lftip"),
-    ]
-    solver = MotionMapper()
-    zero_keypoints = solver.get_zero_pose()
-
-    scale_factor = np.mean(
-        [calc_scale_factor(target[i], zero_keypoints) for i in range(target.shape[0])]
-    )
-    target *= scale_factor
-    print("scale factor", scale_factor)
-
-    for i in range(target.shape[0]):
-        _, R, t = best_fit_transform(
-            target[i, [0, 5, 9, 13]],
-            zero_keypoints[[0, 5, 9, 13]],
-        )
-        # print(R.shape, t.shape, target[i].shape)
-        target[i] = (R @ target[i].T).T + t
-        target[i] += zero_keypoints[[5, 9, 13]].mean(axis=0) - target[
-            i, [5, 9, 13]
-        ].mean(axis=0)
-
-    plot_hand_motion_keypoints(target)
-
-    # human_link_lengths = calc_link_lengths(target[0], HAND_VISULIZATION_LINKS)
-    # robot_link_lengths = calc_link_lengths(zero_pose.keypoints, HAND_VISULIZATION_LINKS)
-    # for i, (start, end) in enumerate(HAND_VISULIZATION_LINKS):
-    #     print(start, end, robot_link_lengths[i] / human_link_lengths[i])
-    # print(calc_link_lengths(target[0], HAND_VISULIZATION_LINKS))
-    # print(calc_link_lengths(zero_pose.keypoints, HAND_VISULIZATION_LINKS))
-    # exit(0)
-    # plot_hand_motion_keypoints(target, "target.gif")
-    # target = filter_position_sequence(target)
-    # plot_hand_motion_keypoints(target, "default_filter.gif")
-    # exit(0)
-
-    velocity_filter = VelocityFilter(5, 5)
-    for i in range(target.shape[0]):
-        target[i] = velocity_filter(target[i])
-        target[i] = extend_pinky(target[i])
     # plot_hand_motion_keypoints(target, "target_glove_1.gif")
     # exit(0)
+    
+    rospy.init_node('retarget2robot',anonymous=True)
+    _thread.start_new_thread( thread_publisher, ("Thread-1", ) )
 
-    result = np.zeros_like(target)
-    latset = np.zeros(solver.dof)
-    start = time.time()
-    for i in tqdm(range(target.shape[0])):
-        latest = solver.step(target[i])
-        # latest = solver.solve(target[i], latset)
-        result[i] = solver.get_pose(latest)
-    end = time.time()
-    print(f"solve {target.shape[0]} frames in {end - start:.2f} seconds")
-    print(f"average {target.shape[0] / (end - start):.2f} fps")
-
-    # plot_hand_motion_keypoints(result, "result_glove_1217.gif")
-    plot_hand_motion_keypoints(result)
-    # # plot_hand_motion_keypoints(target, result)
-    # # plot_two_hands_motion_keypoints(target, result, "result_glove_both_1217.gif")
-    plot_two_hands_motion_keypoints(target, result)
+    rospy.Subscriber('leap_motion_value',Float64MultiArray,callback)
+    print("ready\n")
+    rospy.spin()
