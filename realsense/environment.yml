@@ -106,7 +106,11 @@ dependencies:
     - pycparser==2.21
     - pygments==2.14.0
     - pyparsing==3.0.9
+    - pyqt5==5.15.6
+    - pyqt5-qt5==5.15.2
+    - pyqt5-sip==12.9.1
     - pyquaternion==0.9.9
+    - pyrealsense2==2.53.1.4623
     - pyrsistent==0.18.0
     - python-dateutil==2.8.2
     - pytz==2022.7.1
