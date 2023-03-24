@@ -134,6 +134,8 @@ class MultiCameraManager(object):
             )
             time.sleep(3)
 
+        self.workspace.dump_camera_parameters()
+
     def wait_for_frames(self) -> Tuple[List[np.ndarray], List[np.ndarray]]:
         depth_frames: List[rs.frame] = []
         color_frames: List[rs.frame] = []
@@ -146,20 +148,20 @@ class MultiCameraManager(object):
 
             timestamp = self.get_frame_timestamp(frames)
             timestamps.append(timestamp)
-            
+
             print(i, timestamp)
 
             # depth_frames.append(frames.get_depth_frame())
             # color_frames.append(frames.get_color_frame())
             depth_frame = self.frame_to_array(frames.get_depth_frame())
-            color_frame = self.frame_to_array(frames.get_color_frame()) 
+            color_frame = self.frame_to_array(frames.get_color_frame())
             depth_frames.append(depth_frame)
             color_frames.append(color_frame)
-            
+
             cv2.imshow(f"frame_{i}", color_frame)
-        
+
         k = cv2.waitKey(1) & 0xFF
-        if k == ord('c'):
+        if k == ord("c"):
             timestamp = timestamps[0]
             for i, frame in enumerate(color_frames):
                 # if not frame.is_frame():

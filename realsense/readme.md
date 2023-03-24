@@ -8,12 +8,12 @@ cd multical-input
 
 intrinsic & extrinsic 
 ```
-multical calibrate --boards ../charuco.yam
+multical calibrate --boards ../charuco.yaml
 ```
 
 intrinsic only
 ```
-multical intrinsic --boards ../charuco.yam
+multical intrinsic --boards ../charuco.yaml
 ```
 
 extrinsic only
@@ -24,6 +24,25 @@ multical calibrate --boards ../charuco.yaml --calibration intrinsic.json --fix_i
 ```
 multical calibrate --boards ../charuco.yaml --calibration calibration.json --fix_intrinsic --fix_camera_poses
 ```
+
+create calibration workspace
+```
+python create_multical_ws.py
+```
+
+overwrite intrinsic
+```
+python overwrite_intrinsic.py
+```
+
+load calibration result to workspace
+```
+python load_calibration.py
+```
+
+
+
+
 
 
 ```
