@@ -1,10 +1,9 @@
 import json
 import shutil
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Union
 
 import numpy as np
-import re
 import open3d as o3d
 
 
@@ -58,13 +57,6 @@ class MultiViewSystem:
             names.append(camera_path.stem)
         return cls(workspace_path, cameras, names)
 
-    def save(self, workspace_path: Path) -> None:
-        assert workspace_path.is_dir(), "Invalid workspace path"
-        for name, camera in self.named_cameras:
-            o3d.io.write_pinhole_camera_parameters(
-                str(workspace_path / "cameras" / f"{name}.json"), camera
-            )
-
     def add_camera(
         self, name: str, camera: Optional[o3d.camera.PinholeCameraParameters] = None
     ) -> None:
@@ -73,9 +65,14 @@ class MultiViewSystem:
         self.names.append(name)
         self.cameras.append(camera)
 
-    def get_camera(self, index: int) -> o3d.camera.PinholeCameraParameters:
-        assert 0 <= index < self.n_cameras, "Invalid camera index"
-        return self.cameras[index]
+    def get_camera(self, name: Union[int, str]) -> o3d.camera.PinholeCameraParameters:
+        if isinstance(name, str):
+            return self.cameras[self.names.index(name)]
+        elif isinstance(name, int):    
+            assert 0 <= name < self.n_cameras, "Invalid camera index"
+            return self.cameras[name]
+        else:
+            raise TypeError("Invalid camera name type, expected str or int")
 
     def set_camera_parameter(
         self,
