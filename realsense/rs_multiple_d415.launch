@@ -1,8 +1,9 @@
 <launch>
-  <arg name="serial_no_camera1"    			default="125322061389"/> 			<!-- Note: Replace with actual serial number -->
-  <arg name="serial_no_camera2"    			default="125322064398"/> 			<!-- Note: Replace with actual serial number -->
-  <arg name="serial_no_camera3"    			default=""/> 			<!-- Note: Replace with actual serial number -->
-  <arg name="serial_no_camera4"    			default=""/> 			<!-- Note: Replace with actual serial number -->
+
+  <arg name="serial_no_camera1"    			default="125322060991"/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera2"    			default="125322061389"/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera3"    			default="125322061981"/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera4"    			default="125322064398"/> 			<!-- Note: Replace with actual serial number -->
   <arg name="camera1"              			default="camera1"/>		<!-- Note: Replace with camera name -->
   <arg name="camera2"              			default="camera2"/>		<!-- Note: Replace with camera name -->
   <arg name="camera3"              			default="camera3"/>		<!-- Note: Replace with camera name -->
@@ -14,7 +15,7 @@
 
   <arg name="width"                     default="640"/>
   <arg name="height"                    default="480"/>
-  <arg name="fps"                       default="30"/>
+  <arg name="fps"                       default="6"/>
 
   <arg name="depth_width"               default="$(arg width)"/>
   <arg name="depth_height"              default="$(arg height)"/>
@@ -119,9 +120,9 @@
   <!-- <node pkg="rosbag" type="record" name="rs_rosbag_record" args="-a -O $(arg bag_file)" if="$(arg record_bag)" /> -->
 
   <!-- TF Static Transform Publishers -->
-  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0.7 0.4 0.0 -1.57 0 0 $(arg camera2)_link $(arg camera1)_link 100" />
-  <!-- <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0.7 -0.4 0.0 1.57 0 0 $(arg camera3)_link $(arg camera1)_link 100" /> -->
-  <!-- <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0.7 -1.2 0.0 1.57 0 0 $(arg camera4)_link $(arg camera1)_link 100" /> -->
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_camera1_to_camera2" args="0.45765489 -0.7899882  0.57528055 -0.53636955 -0.05691153 0.37607281  0.75341757  $(arg camera1)_link $(arg camera2)_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_camera1_to_camera3" args="0.38555657 0.61985084  0.55402488 0.53341676  0.00676617  -0.40718787 0.74136281  $(arg camera1)_link $(arg camera3)_link 100" /> 
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_camera1_to_camera4" args="0.84031968 -0.17908619 1.11559698 0.79445949  0.01991063  -0.60596145 -0.03533271 $(arg camera1)_link $(arg camera4)_link 100" />
 
   <!-- Start RViz -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find realsense2_camera)/rviz/multiple_d415.rviz" output="screen"/>
