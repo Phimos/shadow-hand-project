@@ -1,0 +1,14 @@
+Header header
+float64 timestamp
+float64[] target_joint_position
+float64[] target_joint_velocity
+float64[] target_joint_acceleration
+float64[] target_joint_moments
+float64[] actual_joint_position
+float64[] actual_joint_velocity
+float64[] actual_tcp_pose
+float64[] actual_tcp_speed
+float64[] actual_tcp_force
+float64[] target_tcp_pose
+float64[] target_tcp_speed
+float64[] target_tcp_accelerometer
