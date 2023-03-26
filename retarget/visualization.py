@@ -2,10 +2,9 @@ from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from const import HAND_VISULIZATION_LINKS
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
-
-from const import HAND_VISULIZATION_LINKS
 
 
 def save_animation(animation: FuncAnimation, path: str, fps: int = 10, dpi: int = 200):
@@ -124,3 +123,20 @@ def plot_two_hands_motion_keypoints(
 
     if path is not None:
         save_animation(anim, path)
+
+
+
+if __name__ == "__main__":
+    import torch
+    from shadow_hand import ShadowHandModule
+    hand = ShadowHandModule()    
+    joints = torch.zeros(hand.dof)
+    keypoints = hand.forward(joints)
+    plot_hand_keypoints(keypoints.detach().numpy())
+    print(keypoints)
+    # joints[hand.index_of_joint("THJ5")] = 1.0
+    joints[hand.index_of_joint("THJ4")] = 1.0
+    print(joints)
+    keypoints = hand.forward(joints)
+    print(keypoints)
+    plot_hand_keypoints(keypoints.detach().numpy())
